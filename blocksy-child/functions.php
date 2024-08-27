@@ -332,3 +332,87 @@ function custom_blog_layout_shortcode() {
 }
 
 add_shortcode('custom_blog_layout', 'custom_blog_layout_shortcode');
+
+// Function to update total donations for a specific form
+function update_total_donations_for_form($amount, $form_id) {
+    // Create a unique option name based on the form ID
+    $option_name = 'total_donations_raised_form_' . $form_id;
+    
+    // Get the current total for this form
+    $total_raised = get_option($option_name, 0);
+    
+    // Add the new donation amount to the current total
+    $new_total = $total_raised + $amount;
+    
+    // Update the option with the new total for this specific form
+    update_option($option_name, $new_total);
+}
+
+// Hook into the GiveWP payment status update to track donations
+function track_donation_for_form($payment_id, $new_status, $old_status) {
+    if ($new_status === 'publish' && $old_status !== 'publish') {
+        // Get the donation amount
+        $donation_amount = give_get_meta($payment_id, '_give_payment_total', true);
+
+        // Get the form ID
+        $form_id = give_get_meta($payment_id, '_give_payment_form_id', true);
+
+        // Update the total donations raised for this specific form
+        update_total_donations_for_form($donation_amount, $form_id);
+    }
+}
+add_action('give_update_payment_status', 'track_donation_for_form', 10, 3);
+
+// Function to extract the form ID from the page content
+function get_form_id_from_content($content) {
+    if (preg_match('/\[give_form id="(\d+)"\]/', $content, $matches)) {
+        return $matches[1];
+    }
+    return false;
+}
+function pass_donation_data_to_js() {
+    if (is_singular()) {
+        global $post;
+        $form_id = get_form_id_from_content($post->post_content);
+
+        if ($form_id) {
+            // Create a unique option name based on the form ID
+            $option_name = 'total_donations_raised_form_' . $form_id;
+
+            // Check if the option exists; if not, initialize it
+            if (false === get_option($option_name, false)) {
+                update_option($option_name, 0);
+            }
+
+            // Get the total donations for this form
+            $total_raised = get_option($option_name, 0);
+
+            // Set the goal amount
+            $goal = 1000; // Set your goal here
+
+            // Output the JavaScript directly into the page
+            echo "<script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    var totalRaised = {$total_raised};
+                    var goal = {$goal};
+                    var percentage = (totalRaised / goal) * 100;
+
+                    console.log('Total Raised:', totalRaised);
+                    console.log('Goal:', goal);
+                    console.log('Percentage of Goal Achieved:', percentage);
+
+                    // Calculate the scaleY value based on the percentage
+                    var scaleYValue = percentage / 100;
+
+                    // Get the goal-fill element and apply the scaleY transformation
+                    var goalFillElement = document.querySelector('#goal-fill');
+                    if (goalFillElement) {
+                        goalFillElement.style.transform = 'scaleY(' + scaleYValue + ')';
+                    }
+                });
+            </script>";
+        }
+    }
+}
+add_action('wp_footer', 'pass_donation_data_to_js');
+
