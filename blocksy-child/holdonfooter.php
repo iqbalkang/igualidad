@@ -39,7 +39,7 @@
 		</div>
 	</div>
 
-	<a href="https://gold-hedgehog-415177.hostingersite.com/donate" class="footer-btn">Donate</a>
+	<a href="#" class="footer-btn">Donate</a>
 
 	<div class="footer-divider-box">
 		<?php
@@ -51,8 +51,7 @@
 	</div>
 
 	<p>&copy; <?php echo date('Y'); ?> Igualidad. Website designed by <a href="https://www.linkedin.com/in/iqbalkang/">Iqbal S Kang</a>. All rights reserved.</p>
-	
-	 <?php wp_footer(); ?>
+
 
 </footer>
 

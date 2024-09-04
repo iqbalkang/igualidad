@@ -30,64 +30,161 @@ function truncate_bio($text, $words = 15) {
 }
 
 
-function display_board_members() {
-    // Query arguments
-    $args = array(
-        'post_type' => 'member', // Replace with your custom post type
-        'posts_per_page' => -1,
-		'orderby' => 'date',
-		 'order' => 'ASC'
-    );
+// function display_board_members() {
+//     // Query arguments
+//     $args = array(
+//         'post_type' => 'member', // Replace with your custom post type
+//         'posts_per_page' => -1,
+// 		'orderby' => 'date',
+// 		 'order' => 'ASC'
+//     );
 
-    $the_query = new WP_Query($args);
+//     $the_query = new WP_Query($args);
 
-    // Output variable
-    $output = '<div class="member-grid">';
+//     // Output variable
+//     $output = '<div class="member-grid">';
 
-    if ($the_query->have_posts()) {
-        while ($the_query->have_posts()) {
-            $the_query->the_post();
+//     if ($the_query->have_posts()) {
+//         while ($the_query->have_posts()) {
+//             $the_query->the_post();
 
-            // Get custom fields
-            $position = get_field('position');
-            $bio = get_the_content();
+//             // Get custom fields
+//             $position = get_field('position');
+//             $bio = get_the_content();
 
-            // Start generating the member HTML
-            $output .= '<div class="member-item">';
-
-			
-			$default_image_id = 4559;
-			$default_image = wp_get_attachment_image_src($default_image_id, 'full');
-
-			if (has_post_thumbnail()) {
-				$output .= '<div class="member-image-box">';
-				$output .= '<a href="' . get_permalink() . '">';
-				$output .= get_the_post_thumbnail(get_the_ID(), 'full', ['class' => 'member-image', 'alt' => get_the_title()]);
-				$output .= '</a>';
-				$output .= '</div>';
-			} else {
-				$output .= '<div class="member-image-box">';
-				$output .= '<a href="' . get_permalink() . '">';
-				$output .= '<img src="' . esc_url($default_image[0]) . '" class="member-image" alt="Default Image" />';
-				$output .= '</a>';
-				$output .= '</div>';
-			}
+//             // Start generating the member HTML
+//             $output .= '<div class="member-item">';
 
 			
+// 			$default_image_id = 4559;
+// 			$default_image = wp_get_attachment_image_src($default_image_id, 'full');
+
 // 			if (has_post_thumbnail()) {
 // 				$output .= '<div class="member-image-box">';
 // 				$output .= '<a href="' . get_permalink() . '">';
 // 				$output .= get_the_post_thumbnail(get_the_ID(), 'full', ['class' => 'member-image', 'alt' => get_the_title()]);
 // 				$output .= '</a>';
 // 				$output .= '</div>';
+// 			} else {
+// 				$output .= '<div class="member-image-box">';
+// 				$output .= '<a href="' . get_permalink() . '">';
+// 				$output .= '<img src="' . esc_url($default_image[0]) . '" class="member-image" alt="Default Image" />';
+// 				$output .= '</a>';
+// 				$output .= '</div>';
 // 			}
 
 			
-			$output .= '<h5 class="member-name"><a href="' . get_permalink() . '">' . get_the_title() . '</a></h5>';
+// // 			if (has_post_thumbnail()) {
+// // 				$output .= '<div class="member-image-box">';
+// // 				$output .= '<a href="' . get_permalink() . '">';
+// // 				$output .= get_the_post_thumbnail(get_the_ID(), 'full', ['class' => 'member-image', 'alt' => get_the_title()]);
+// // 				$output .= '</a>';
+// // 				$output .= '</div>';
+// // 			}
+
+			
+// 			$output .= '<h5 class="member-name"><a href="' . get_permalink() . '">' . get_the_title() . '</a></h5>';
+//             $output .= '<p class="member-position">' . esc_html($position) . '</p>';
+//             $output .= '<div class="member-bio">' . apply_filters('the_content', truncate_bio($bio)) . ' <a href="' . get_permalink() . '" class="read-more-link">Read More</a></div>';
+			
+			
+//             $output .= '</div>'; // Close .member-item
+//         }
+//         wp_reset_postdata();
+//     } else {
+//         $output .= '<p>No members found.</p>';
+//     }
+
+//     $output .= '</div>'; // Close .member-grid
+
+//     return $output;
+// }
+
+function display_board_members() {
+    // Define manual order for specific members
+    $manual_order = array(
+        'Ljuba Marsh, M.Ed.' => 'President',
+        'Amanda Moorhouse Molinaro' => 'Vice President',
+        'Karen Sumaryono' => 'Board Secretary',
+        'Kyong Cruz' => 'Board Treasurer',
+    );
+
+    // Output variable
+    $output = '<div class="member-grid">';
+
+    // First, display manually ordered members
+    foreach ($manual_order as $name => $position) {
+        $member = get_page_by_title($name, OBJECT, 'member');
+        if ($member) {
+            // Start generating the member HTML
+            $output .= '<div class="member-item">';
+
+            if (has_post_thumbnail($member->ID)) {
+                $output .= '<div class="member-image-box">';
+                $output .= '<a href="' . get_permalink($member->ID) . '">';
+                $output .= get_the_post_thumbnail($member->ID, 'full', ['class' => 'member-image', 'alt' => $name]);
+                $output .= '</a>';
+                $output .= '</div>';
+            } else {
+                $default_image_id = 4559;
+                $default_image = wp_get_attachment_image_src($default_image_id, 'full');
+                $output .= '<div class="member-image-box">';
+                $output .= '<a href="' . get_permalink($member->ID) . '">';
+                $output .= '<img src="' . esc_url($default_image[0]) . '" class="member-image" alt="Default Image" />';
+                $output .= '</a>';
+                $output .= '</div>';
+            }
+
+            $output .= '<h5 class="member-name"><a href="' . get_permalink($member->ID) . '">' . $name . '</a></h5>';
+            $output .= '<p class="member-position">' . esc_html($position) . '</p>';
+            $output .= '<div class="member-bio">' . apply_filters('the_content', truncate_bio($member->post_content)) . ' <a href="' . get_permalink($member->ID) . '" class="read-more-link">Read More</a></div>';
+            $output .= '</div>'; // Close .member-item
+        }
+    }
+
+    // Query for the remaining members, excluding the ones already listed
+    $args = array(
+        'post_type' => 'member',
+        'posts_per_page' => -1,
+        'orderby' => 'title',
+        'order' => 'ASC',
+        'post__not_in' => array_map(function($name) {
+            $member = get_page_by_title($name, OBJECT, 'member');
+            return $member ? $member->ID : 0;
+        }, array_keys($manual_order)),
+    );
+
+    $the_query = new WP_Query($args);
+
+    if ($the_query->have_posts()) {
+        while ($the_query->have_posts()) {
+            $the_query->the_post();
+
+            // Default title for other members
+            $position = 'Board Member';
+            $bio = get_the_content();
+
+            $output .= '<div class="member-item">';
+            
+            if (has_post_thumbnail()) {
+                $output .= '<div class="member-image-box">';
+                $output .= '<a href="' . get_permalink() . '">';
+                $output .= get_the_post_thumbnail(get_the_ID(), 'full', ['class' => 'member-image', 'alt' => get_the_title()]);
+                $output .= '</a>';
+                $output .= '</div>';
+            } else {
+                $default_image_id = 4559;
+                $default_image = wp_get_attachment_image_src($default_image_id, 'full');
+                $output .= '<div class="member-image-box">';
+                $output .= '<a href="' . get_permalink() . '">';
+                $output .= '<img src="' . esc_url($default_image[0]) . '" class="member-image" alt="Default Image" />';
+                $output .= '</a>';
+                $output .= '</div>';
+            }
+
+            $output .= '<h5 class="member-name"><a href="' . get_permalink() . '">' . get_the_title() . '</a></h5>';
             $output .= '<p class="member-position">' . esc_html($position) . '</p>';
             $output .= '<div class="member-bio">' . apply_filters('the_content', truncate_bio($bio)) . ' <a href="' . get_permalink() . '" class="read-more-link">Read More</a></div>';
-			
-			
             $output .= '</div>'; // Close .member-item
         }
         wp_reset_postdata();
@@ -99,6 +196,7 @@ function display_board_members() {
 
     return $output;
 }
+
 
 // Register the shortcode
 add_shortcode('board_members', 'display_board_members');
